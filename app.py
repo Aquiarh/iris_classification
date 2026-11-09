@@ -1,18 +1,24 @@
 import streamlit as st
 import numpy as np
-import joblib
+from sklearn.datasets import load_iris
+from sklearn.ensemble import RandomForestClassifier
 
 st.set_page_config(page_title="Iris Species Classifier", layout="centered")
 
 st.title("🌸 Iris Flower Classification Portal")
 st.write("Enter flower dimensions to predict species classification.")
 
-# Load model
 @st.cache_resource
 def load_model():
-    return joblib.load('iris_model.pkl')
+    # Load dataset directly from scikit-learn and fit model
+    iris = load_iris()
+    X = iris.data
+    y = iris.target
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X, y)
+    return model, iris.target_names
 
-model = load_model()
+model, target_names = load_model()
 
 col1, col2 = st.columns(2)
 with col1:
@@ -24,11 +30,12 @@ with col2:
 
 if st.button("Predict Species"):
     features = np.array([[sepal_len, sepal_wid, petal_len, petal_wid]])
-    prediction = model.predict(features)[0]
+    pred_idx = model.predict(features)[0]
+    prediction = target_names[pred_idx]
     probabilities = model.predict_proba(features)[0]
     
-    st.success(f"Predicted Species: **{prediction.upper()}**")
+    st.success(f"Predicted Species: **{prediction.capitalize()}**")
     
     st.subheader("Prediction Confidence")
-    for cls, prob in zip(model.classes_, probabilities):
-        st.write(f"- **{cls.capitalize()}**: {prob * 100:.2f}%")
+    for name, prob in zip(target_names, probabilities):
+        st.write(f"- **{name.capitalize()}**: {prob * 100:.2f}%")
