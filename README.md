@@ -1,18 +1,11 @@
-# Iris Flower Classification System
+# Iris Botanical Species Classifier
 
-An end-to-end machine learning project classifying Iris flower species (*Setosa*, *Versicolor*, *Virginica*) based on sepal and petal dimensions.
+A multi-class machine learning inference portal deployed on Vercel for botanical species classification based on morphological sepal and petal measurements.
+
+## Live Deployment
+- **Live Application URL:** [https://iris-classification-iwxp-flame.vercel.app](https://iris-classification-iwxp-flame.vercel.app)
 
 ## Features
-- **Exploratory Data Analysis (EDA):** Morphometric distribution and feature correlation.
-- **Model Training:** Multi-class classification using Random Forest (`scikit-learn`).
-- **Interactive UI:** Web-based inference app built with Streamlit.
-- **Evaluation:** Evaluated across Accuracy, Precision, Recall, F1-Score, and Confusion Matrix.
-
-## Installation & Local Run
-```bash
-git clone [https://github.com/Aquiarh/iris_classification.git](https://github.com/Aquiarh/iris_classification.git)
-cd iris_classification
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
+- Interactive sepal and petal slider inputs with instant preset buttons (Setosa, Versicolor, Virginica).
+- Real-time client-side multi-class probability distribution calculation.
+- Optimized and deployed as a high-performance static web application on Vercel.
