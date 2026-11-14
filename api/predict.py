@@ -1,25 +1,73 @@
+import math
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-import numpy as np
-from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
 
 app = FastAPI()
 
-# Train lightweight Random Forest classifier once on startup
-iris = load_iris()
-X, y = iris.data, iris.target
 target_names = ["Iris Setosa", "Iris Versicolor", "Iris Virginica"]
 
-clf = RandomForestClassifier(n_estimators=100, random_state=42)
-clf.fit(X, y)
+# Complete 150-sample Fisher's Iris reference dataset (sepal_len, sepal_wid, petal_len, petal_wid, class_idx)
+IRIS_DATA = [
+    (5.1,3.5,1.4,0.2,0),(4.9,3.0,1.4,0.2,0),(4.7,3.2,1.3,0.2,0),(4.6,3.1,1.5,0.2,0),(5.0,3.6,1.4,0.2,0),
+    (5.4,3.9,1.7,0.4,0),(4.6,3.4,1.4,0.3,0),(5.0,3.4,1.5,0.2,0),(4.4,2.9,1.4,0.2,0),(4.9,3.1,1.5,0.1,0),
+    (5.4,3.7,1.5,0.2,0),(4.8,3.4,1.6,0.2,0),(4.8,3.0,1.4,0.1,0),(4.3,3.0,1.1,0.1,0),(5.8,4.0,1.2,0.2,0),
+    (5.7,4.4,1.5,0.4,0),(5.4,3.9,1.3,0.4,0),(5.1,3.5,1.4,0.3,0),(5.7,3.8,1.7,0.3,0),(5.1,3.8,1.5,0.3,0),
+    (5.4,3.4,1.7,0.2,0),(5.1,3.7,1.5,0.4,0),(4.6,3.6,1.0,0.2,0),(5.1,3.3,1.7,0.5,0),(4.8,3.4,1.9,0.2,0),
+    (5.0,3.0,1.6,0.2,0),(5.0,3.4,1.6,0.4,0),(5.2,3.5,1.5,0.2,0),(5.2,3.4,1.4,0.2,0),(4.7,3.2,1.6,0.2,0),
+    (4.8,3.1,1.6,0.2,0),(5.4,3.4,1.5,0.4,0),(5.2,4.1,1.5,0.1,0),(5.5,4.2,1.4,0.2,0),(4.9,3.1,1.5,0.2,0),
+    (5.0,3.2,1.2,0.2,0),(5.5,3.5,1.3,0.2,0),(4.9,3.6,1.4,0.1,0),(4.4,3.0,1.3,0.2,0),(5.1,3.4,1.5,0.2,0),
+    (5.0,3.5,1.3,0.3,0),(4.5,2.3,1.3,0.3,0),(4.4,3.2,1.3,0.2,0),(5.0,3.5,1.6,0.6,0),(5.1,3.8,1.9,0.4,0),
+    (4.8,3.0,1.4,0.3,0),(5.1,3.8,1.6,0.2,0),(4.6,3.2,1.4,0.2,0),(5.3,3.7,1.5,0.2,0),(5.0,3.3,1.4,0.2,0),
+    (7.0,3.2,4.7,1.4,1),(6.4,3.2,4.5,1.5,1),(6.9,3.1,4.9,1.5,1),(5.5,2.3,4.0,1.3,1),(6.5,2.8,4.6,1.5,1),
+    (5.7,2.8,4.5,1.3,1),(6.3,3.3,4.7,1.6,1),(4.9,2.4,3.3,1.0,1),(6.6,2.9,4.6,1.3,1),(5.2,2.7,3.9,1.4,1),
+    (5.0,2.0,3.5,1.0,1),(5.9,3.0,4.2,1.5,1),(6.0,2.2,4.0,1.0,1),(6.1,2.9,4.7,1.4,1),(5.6,2.9,3.6,1.3,1),
+    (6.7,3.1,4.4,1.4,1),(5.6,3.0,4.5,1.5,1),(5.8,2.7,4.1,1.0,1),(6.2,2.2,4.5,1.5,1),(5.6,2.5,3.9,1.1,1),
+    (5.9,3.2,4.8,1.8,1),(6.1,2.8,4.0,1.3,1),(6.3,2.5,4.9,1.5,1),(6.1,2.8,4.7,1.2,1),(6.4,2.9,4.3,1.3,1),
+    (6.6,3.0,4.4,1.4,1),(6.8,2.8,4.8,1.4,1),(6.7,3.0,5.0,1.7,1),(6.0,2.9,4.5,1.5,1),(5.7,2.6,3.5,1.0,1),
+    (5.5,2.4,3.8,1.1,1),(5.5,2.4,3.7,1.0,1),(5.8,2.7,3.9,1.2,1),(6.0,2.7,5.1,1.6,1),(5.4,3.0,4.5,1.5,1),
+    (6.0,3.4,4.5,1.6,1),(6.7,3.1,4.7,1.5,1),(6.3,2.3,4.4,1.3,1),(5.6,3.0,4.1,1.3,1),(5.5,2.5,4.0,1.3,1),
+    (5.5,2.6,4.4,1.2,1),(6.1,3.0,4.6,1.4,1),(5.8,2.6,4.0,1.2,1),(5.0,2.3,3.3,1.0,1),(5.6,2.7,4.2,1.3,1),
+    (5.7,3.0,4.2,1.2,1),(5.7,2.9,4.2,1.3,1),(6.2,2.9,4.3,1.3,1),(5.1,2.5,3.0,1.1,1),(5.7,2.8,4.1,1.3,1),
+    (6.3,3.3,6.0,2.5,2),(5.8,2.7,5.1,1.9,2),(7.1,3.0,5.9,2.1,2),(6.3,2.9,5.6,1.8,2),(6.5,3.0,5.8,2.2,2),
+    (7.6,3.0,6.6,2.1,2),(4.9,2.5,4.5,1.7,2),(7.3,2.9,6.3,1.8,2),(6.7,2.5,5.8,1.8,2),(7.2,3.6,6.1,2.5,2),
+    (6.5,3.2,5.1,2.0,2),(6.4,2.7,5.3,1.9,2),(6.8,3.0,5.5,2.1,2),(5.7,2.5,5.0,2.0,2),(5.8,2.8,5.1,2.4,2),
+    (6.4,3.2,5.3,2.3,2),(6.5,3.0,5.5,1.8,2),(7.7,3.8,6.7,2.2,2),(7.7,2.6,6.9,2.3,2),(6.0,2.2,5.0,1.5,2),
+    (6.9,3.2,5.7,2.3,2),(5.6,2.8,4.9,2.0,2),(7.7,2.8,6.7,2.0,2),(6.3,2.7,4.9,1.8,2),(6.7,3.3,5.7,2.1,2),
+    (7.2,3.2,6.0,1.8,2),(6.2,2.8,4.8,1.8,2),(6.1,3.0,4.9,1.8,2),(6.4,2.8,5.6,2.1,2),(7.2,3.0,5.8,1.6,2),
+    (7.4,2.8,6.1,1.9,2),(7.9,3.8,6.4,2.0,2),(6.4,2.8,5.6,2.2,2),(6.3,2.8,5.1,1.5,2),(6.1,2.6,5.6,1.4,2),
+    (7.7,3.0,6.1,2.3,2),(6.3,3.4,5.6,2.4,2),(6.4,3.1,5.5,1.8,2),(6.0,3.0,4.8,1.8,2),(6.9,3.1,5.4,2.1,2),
+    (6.7,3.1,5.6,2.4,2),(6.9,3.1,5.1,2.3,2),(5.8,2.7,5.1,1.9,2),(6.8,3.2,5.9,2.3,2),(6.7,3.3,5.7,2.5,2),
+    (6.7,3.0,5.2,2.3,2),(6.3,2.5,5.0,1.9,2),(6.5,3.0,5.2,2.0,2),(6.2,3.4,5.4,2.3,2),(5.9,3.0,5.1,1.8,2),
+]
 
 class IrisFeatures(BaseModel):
     sepal_length: float
     sepal_width: float
     petal_length: float
     petal_width: float
+
+def classify_knn(sl: float, sw: float, pl: float, pw: float, k: int = 15):
+    distances = []
+    for row in IRIS_DATA:
+        dist = math.sqrt(
+            (sl - row[0]) ** 2 +
+            (sw - row[1]) ** 2 +
+            (pl - row[2]) ** 2 +
+            (pw - row[3]) ** 2
+        )
+        distances.append((dist, row[4]))
+    distances.sort(key=lambda x: x[0])
+    neighbors = distances[:k]
+
+    weights = [0.0, 0.0, 0.0]
+    for dist, cls in neighbors:
+        weights[cls] += 1.0 / (dist + 1e-6)
+
+    total_weight = sum(weights)
+    probs = [w / total_weight for w in weights]
+    pred_idx = max(range(3), key=lambda i: probs[i])
+    return pred_idx, probs
 
 HTML_PAGE = """<!DOCTYPE html>
 <html lang="en">
@@ -110,7 +158,7 @@ HTML_PAGE = """<!DOCTYPE html>
   <div class="container">
     <header>
       <h1>🌺 Iris Botanical Species Classifier</h1>
-      <p>Multi-Class Random Forest Inference Portal | Deployed on Vercel</p>
+      <p>Multi-Class Machine Learning Inference Portal | Deployed on Vercel</p>
     </header>
 
     <div class="grid">
@@ -218,21 +266,18 @@ def serve_home():
 @app.post("/api/predict")
 def predict_species(data: IrisFeatures):
     try:
-        features = np.array([[
+        pred_idx, probs = classify_knn(
             data.sepal_length,
             data.sepal_width,
             data.petal_length,
             data.petal_width
-        ]])
-
-        pred_idx = int(clf.predict(features)[0])
-        probs = clf.predict_proba(features)[0]
+        )
 
         return {
             "species": target_names[pred_idx],
-            "confidence": round(float(probs[pred_idx]) * 100, 2),
+            "confidence": round(probs[pred_idx] * 100, 2),
             "probabilities": {
-                target_names[i]: round(float(probs[i]) * 100, 2)
+                target_names[i]: round(probs[i] * 100, 2)
                 for i in range(len(target_names))
             }
         }
