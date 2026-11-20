@@ -3,139 +3,767 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iris Botanical Species Classifier | Patience Korbla</title>
+  <title>Iris Botanical Species Classifier & ML Analytics Dashboard</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            navy: '#1B365D',
+            teal: '#2E7D6B',
+            coral: '#C86D51',
+            canvas: '#F8FAFC',
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --accent: #38bdf8;
-      --accent-hover: #0284c7;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --border: #334155;
-      --success: #10b981;
+    /* Custom Range Slider Styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 999px;
+      background: #E2E8F0;
+      outline: none;
     }
-    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      padding: 2rem 1rem;
-      display: flex;
-      justify-content: center;
-    }
-    .container { max-width: 900px; width: 100%; }
-    header { text-align: center; margin-bottom: 2rem; }
-    header h1 { margin: 0 0 0.5rem; font-size: 1.9rem; color: var(--accent); }
-    header p { margin: 0; color: var(--muted); }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
-    .card h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
-    .presets { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
-    .preset-btn {
-      background: #0f172a;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      padding: 0.4rem 0.75rem;
-      border-radius: 6px;
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #1B365D;
       cursor: pointer;
-      font-size: 0.85rem;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 2px 5px rgba(27, 54, 93, 0.35);
+      transition: transform 0.15s ease, background-color 0.15s ease;
     }
-    .preset-btn:hover { background: var(--accent); color: #0f172a; }
-    .control { margin-bottom: 1.1rem; }
-    .control label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.35rem; }
-    .control span { color: var(--accent); font-weight: 600; }
-    input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
-    .submit-btn {
-      width: 100%;
-      padding: 0.85rem;
-      background: var(--accent);
-      color: #0f172a;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 1rem;
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #2E7D6B;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #1B365D;
       cursor: pointer;
-      margin-top: 0.5rem;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 2px 5px rgba(27, 54, 93, 0.35);
     }
-    .submit-btn:hover { background: var(--accent-hover); color: #fff; }
-    .result-box {
-      background: #0f172a;
-      border-left: 4px solid var(--success);
-      padding: 1rem;
-      border-radius: 6px;
-      margin-bottom: 1.25rem;
+    @keyframes pulseRing {
+      0% { transform: scale(0.85); opacity: 0.9; }
+      70% { transform: scale(1.8); opacity: 0; }
+      100% { transform: scale(1.8); opacity: 0; }
     }
-    .result-species { font-size: 1.5rem; font-weight: 700; color: var(--success); }
-    .bar-group { margin-bottom: 0.85rem; }
-    .bar-label { display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.25rem; }
-    .bar-bg { background: #0f172a; height: 10px; border-radius: 99px; overflow: hidden; }
-    .bar-fill { background: var(--accent); height: 100%; transition: width 0.35s ease; }
+    .pulse-ring {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulseRing 2s infinite ease-out;
+    }
+    .tab-panel {
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
-<body>
-  <div class="container">
-    <header>
-      <h1>🌺 Iris Botanical Species Classifier</h1>
-      <p>Multi-Class Machine Learning Inference Portal | Deployed on Vercel</p>
-    </header>
+<body class="bg-[#F8FAFC] text-slate-800 font-sans antialiased selection:bg-[#1B365D] selection:text-white">
 
-    <div class="grid">
-      <div class="card">
-        <h2>Morphological Measurements (cm)</h2>
-        <div class="presets">
-          <button class="preset-btn" onclick="setPreset(5.1, 3.5, 1.4, 0.2)">Preset: Setosa</button>
-          <button class="preset-btn" onclick="setPreset(6.0, 2.7, 4.5, 1.5)">Preset: Versicolor</button>
-          <button class="preset-btn" onclick="setPreset(6.7, 3.1, 5.6, 2.4)">Preset: Virginica</button>
-        </div>
+  <!-- Global Tooltip for Interactive SVG Charts -->
+  <div id="chart-tooltip" class="fixed z-50 pointer-events-none hidden bg-slate-900/95 text-white text-xs rounded-xl px-3 py-2 shadow-xl border border-slate-700 backdrop-blur-sm transition-opacity duration-100"></div>
 
-        <div class="control">
-          <label>Sepal Length <span id="sl_val">5.8 cm</span></label>
-          <input type="range" id="sepal_length" min="4.0" max="8.0" step="0.1" value="5.8" oninput="updateVal('sepal_length', 'sl_val'); predictSpecies();" />
-        </div>
-        <div class="control">
-          <label>Sepal Width <span id="sw_val">3.0 cm</span></label>
-          <input type="range" id="sepal_width" min="2.0" max="4.5" step="0.1" value="3.0" oninput="updateVal('sepal_width', 'sw_val'); predictSpecies();" />
-        </div>
-        <div class="control">
-          <label>Petal Length <span id="pl_val">4.3 cm</span></label>
-          <input type="range" id="petal_length" min="1.0" max="7.0" step="0.1" value="4.3" oninput="updateVal('petal_length', 'pl_val'); predictSpecies();" />
-        </div>
-        <div class="control">
-          <label>Petal Width <span id="pw_val">1.3 cm</span></label>
-          <input type="range" id="petal_width" min="0.1" max="2.5" step="0.1" value="1.3" oninput="updateVal('petal_width', 'pw_val'); predictSpecies();" />
+  <!-- Top Navigation & Project Metadata Header -->
+  <header class="bg-gradient-to-r from-[#132847] via-[#1B365D] to-[#214373] text-white shadow-lg border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2.5 text-xs font-semibold uppercase tracking-wider text-emerald-300 mb-1.5">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Assignment 1 • Supervised Multi-Class Classification & EDA
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+            Iris Botanical Species Classifier & ML Analytics Dashboard
+          </h1>
+          <p class="text-slate-300 text-sm mt-1 max-w-3xl">
+            Interactive client-side inference engine paired with complete exploratory data analysis, descriptive statistics, and multi-algorithm evaluation benchmarks.
+          </p>
         </div>
 
-        <button class="submit-btn" onclick="predictSpecies()">Classify Botanical Species</button>
+        <!-- Metadata Badges -->
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 shrink-0">
+          <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-xl px-3 py-2">
+            <div class="text-[10px] uppercase tracking-wider text-slate-300 font-semibold">Dataset Corpus</div>
+            <div class="text-xs sm:text-sm font-bold text-white">Scikit-Learn Iris (N = 150)</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-xl px-3 py-2">
+            <div class="text-[10px] uppercase tracking-wider text-slate-300 font-semibold">Primary Model</div>
+            <div class="text-xs sm:text-sm font-bold text-white">Logistic Regression (L2)</div>
+          </div>
+          <div class="bg-[#2E7D6B]/40 backdrop-blur-md border border-emerald-400/30 rounded-xl px-3 py-2">
+            <div class="text-[10px] uppercase tracking-wider text-emerald-200 font-semibold">5-Fold CV Accuracy</div>
+            <div class="text-xs sm:text-sm font-bold text-emerald-300 font-mono">95.33% ± 4.52%</div>
+          </div>
+          <div class="bg-[#C86D51]/30 backdrop-blur-md border border-orange-300/30 rounded-xl px-3 py-2">
+            <div class="text-[10px] uppercase tracking-wider text-orange-200 font-semibold">Hold-Out ROC-AUC</div>
+            <div class="text-xs sm:text-sm font-bold text-orange-200 font-mono">99.67% (OvR)</div>
+          </div>
+        </div>
       </div>
 
-      <div class="card">
-        <h2>Classification Output</h2>
-        <div class="result-box">
-          <div style="font-size:0.85rem; color:var(--muted);">Predicted Taxonomic Class</div>
-          <div class="result-species" id="pred_species">Iris Versicolor</div>
-          <div style="font-size:0.9rem; margin-top:0.25rem;" id="pred_conf">Confidence: 98.00%</div>
-        </div>
-
-        <h3 style="font-size:1rem; color:var(--muted); margin-bottom:0.75rem;">Class Probability Distribution</h3>
-        <div id="prob_bars"></div>
-      </div>
+      <!-- Tabbed Navigation Bar -->
+      <nav class="mt-6 flex flex-wrap gap-2 border-t border-white/10 pt-4" aria-label="Dashboard Sections">
+        <button onclick="switchTab('predictor')" id="tab-btn-predictor"
+          class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all bg-white text-[#1B365D] shadow-md">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
+          1. Live Species Predictor
+        </button>
+        <button onclick="switchTab('eda')" id="tab-btn-eda"
+          class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-200 hover:bg-white/10">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+          2. Exploratory Data Analysis (EDA)
+        </button>
+        <button onclick="switchTab('evaluation')" id="tab-btn-evaluation"
+          class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-200 hover:bg-white/10">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>
+          3. Model Evaluation & Benchmarks
+        </button>
+      </nav>
     </div>
-  </div>
+  </header>
 
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ===================================================================== -->
+    <!-- TAB 1: LIVE SPECIES PREDICTOR (INTERACTIVE INFERENCE ENGINE)          -->
+    <!-- ===================================================================== -->
+    <section id="panel-predictor" class="tab-panel space-y-6">
+      <!-- Quick-Test Preset Bar -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-bold text-[#1B365D] uppercase tracking-wider">Quick-Test Botanical Specimen Presets</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Load verified test profiles or adjust the morphological sliders below for real-time softmax inference.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="applyPreset(5.1, 3.5, 1.4, 0.2)"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#1B365D]/10 text-[#1B365D] hover:bg-[#1B365D] hover:text-white transition-colors border border-[#1B365D]/20">
+              Setosa Sample [5.1, 3.5, 1.4, 0.2]
+            </button>
+            <button onclick="applyPreset(6.0, 2.7, 4.2, 1.3)"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#2E7D6B]/10 text-[#2E7D6B] hover:bg-[#2E7D6B] hover:text-white transition-colors border border-[#2E7D6B]/20">
+              Versicolor Sample [6.0, 2.7, 4.2, 1.3]
+            </button>
+            <button onclick="applyPreset(6.7, 3.0, 5.6, 2.1)"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#C86D51]/10 text-[#C86D51] hover:bg-[#C86D51] hover:text-white transition-colors border border-[#C86D51]/20">
+              Virginica Sample [6.7, 3.0, 5.6, 2.1]
+            </button>
+            <button onclick="applyPreset(6.1, 2.9, 4.9, 1.7)"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-800 hover:bg-amber-600 hover:text-white transition-colors border border-amber-500/25">
+              Boundary Case [6.1, 2.9, 4.9, 1.7]
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main 12-Col Grid: Controls (5 cols) + Prediction & Live Feature-Space Map (7 cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Feature Sliders & Numeric Inputs -->
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+              <div>
+                <h3 class="text-lg font-bold text-[#1B365D]">Morphological Feature Inputs</h3>
+                <p class="text-xs text-slate-500">Continuous calyx & corolla dimensions (cm)</p>
+              </div>
+              <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-medium">X ∈ ℝ⁴</span>
+            </div>
+
+            <div class="space-y-5">
+              <!-- Sepal Length -->
+              <div class="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/60">
+                <div class="flex items-center justify-between mb-2">
+                  <label for="num-sl" class="text-sm font-semibold text-slate-700">Sepal Length (cm)</label>
+                  <div class="flex items-center gap-1.5">
+                    <input id="num-sl" type="number" min="4.0" max="8.0" step="0.1" value="5.1"
+                      oninput="syncFromNumber('sl')"
+                      class="w-20 text-right font-mono text-sm font-bold text-[#1B365D] bg-white border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1B365D]" />
+                    <span class="text-xs text-slate-400 font-mono">cm</span>
+                  </div>
+                </div>
+                <input id="range-sl" type="range" min="4.0" max="8.0" step="0.1" value="5.1"
+                  oninput="syncFromRange('sl')" class="w-full" />
+                <div class="flex justify-between text-[11px] text-slate-400 font-mono mt-1">
+                  <span>4.0 cm</span>
+                  <span>Mean: 5.84 cm</span>
+                  <span>8.0 cm</span>
+                </div>
+              </div>
+
+              <!-- Sepal Width -->
+              <div class="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/60">
+                <div class="flex items-center justify-between mb-2">
+                  <label for="num-sw" class="text-sm font-semibold text-slate-700">Sepal Width (cm)</label>
+                  <div class="flex items-center gap-1.5">
+                    <input id="num-sw" type="number" min="2.0" max="4.5" step="0.1" value="3.5"
+                      oninput="syncFromNumber('sw')"
+                      class="w-20 text-right font-mono text-sm font-bold text-[#1B365D] bg-white border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1B365D]" />
+                    <span class="text-xs text-slate-400 font-mono">cm</span>
+                  </div>
+                </div>
+                <input id="range-sw" type="range" min="2.0" max="4.5" step="0.1" value="3.5"
+                  oninput="syncFromRange('sw')" class="w-full" />
+                <div class="flex justify-between text-[11px] text-slate-400 font-mono mt-1">
+                  <span>2.0 cm</span>
+                  <span>Mean: 3.06 cm</span>
+                  <span>4.5 cm</span>
+                </div>
+              </div>
+
+              <!-- Petal Length -->
+              <div class="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/60">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <label for="num-pl" class="text-sm font-semibold text-slate-700">Petal Length (cm)</label>
+                    <span class="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">High Weight</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <input id="num-pl" type="number" min="1.0" max="7.0" step="0.1" value="1.4"
+                      oninput="syncFromNumber('pl')"
+                      class="w-20 text-right font-mono text-sm font-bold text-[#1B365D] bg-white border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1B365D]" />
+                    <span class="text-xs text-slate-400 font-mono">cm</span>
+                  </div>
+                </div>
+                <input id="range-pl" type="range" min="1.0" max="7.0" step="0.1" value="1.4"
+                  oninput="syncFromRange('pl')" class="w-full" />
+                <div class="flex justify-between text-[11px] text-slate-400 font-mono mt-1">
+                  <span>1.0 cm</span>
+                  <span>Mean: 3.76 cm</span>
+                  <span>7.0 cm</span>
+                </div>
+              </div>
+
+              <!-- Petal Width -->
+              <div class="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/60">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <label for="num-pw" class="text-sm font-semibold text-slate-700">Petal Width (cm)</label>
+                    <span class="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Top Predictor</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <input id="num-pw" type="number" min="0.1" max="2.5" step="0.1" value="0.2"
+                      oninput="syncFromNumber('pw')"
+                      class="w-20 text-right font-mono text-sm font-bold text-[#1B365D] bg-white border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1B365D]" />
+                    <span class="text-xs text-slate-400 font-mono">cm</span>
+                  </div>
+                </div>
+                <input id="range-pw" type="range" min="0.1" max="2.5" step="0.1" value="0.2"
+                  oninput="syncFromRange('pw')" class="w-full" />
+                <div class="flex justify-between text-[11px] text-slate-400 font-mono mt-1">
+                  <span>0.1 cm</span>
+                  <span>Mean: 1.20 cm</span>
+                  <span>2.5 cm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Standardized Z-Score Readout -->
+          <div class="mt-5 pt-4 border-t border-slate-100">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">StandardScaler Z-Score Vector (z = (x - μ) / σ)</div>
+            <div id="zscore-readout" class="font-mono text-xs bg-slate-900 text-emerald-300 rounded-xl px-3.5 py-2.5 overflow-x-auto">
+              z = [-0.8856, +1.0114, -1.3458, -1.3232]
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Prediction Output Card + Live Petal Space Scatter Plot -->
+        <div class="lg:col-span-7 space-y-6">
+
+          <!-- Predicted Species Card & Softmax Probabilities -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+              <div class="flex items-center gap-4">
+                <div id="species-badge-icon" class="w-14 h-14 rounded-2xl bg-[#1B365D] text-white flex items-center justify-center shadow-md shrink-0">
+                  <!-- Dynamic Botanical SVG Icon -->
+                  <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.5 3.5 4 6.5 4 9a4 4 0 11-8 0c0-2.5 1.5-5.5 4-9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c-3.5-1.5-6.5-1.5-8.5 0 1.5 2.5 4.5 4 8.5 3m0-3c3.5-1.5 6.5-1.5 8.5 0-1.5 2.5-4.5 4-8.5 3m0 0v6"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Predicted Taxonomic Classification</div>
+                  <h3 id="pred-species-name" class="text-2xl sm:text-3xl font-extrabold text-[#1B365D] italic">Iris setosa</h3>
+                  <p id="pred-species-confidence" class="text-xs font-medium text-slate-500 mt-0.5">Softmax Posterior Confidence: <span class="font-mono font-bold text-[#1B365D]">98.12%</span></p>
+                </div>
+              </div>
+              <div id="pred-margin-pill" class="self-start sm:self-center px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                High-Confidence Region
+              </div>
+            </div>
+
+            <!-- Botanical Profile Summary -->
+            <p id="pred-species-desc" class="text-sm text-slate-600 leading-relaxed mt-4 bg-slate-50 rounded-xl p-3.5 border border-slate-200/60">
+              Characterized by compact, narrow petals (1.0–1.9 cm length) paired with comparatively broad sepals (mean 3.43 cm). Linearly separable from both sister taxa across petal feature space.
+            </p>
+
+            <!-- Softmax Posterior Probability Bars -->
+            <div class="mt-5 space-y-3.5">
+              <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Multinomial Softmax Class Probability Distribution</div>
+
+              <!-- Setosa Bar -->
+              <div>
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                  <span class="flex items-center gap-2 text-[#1B365D]">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#1B365D]"></span>
+                    Iris setosa (Class 0)
+                  </span>
+                  <span id="prob-text-0" class="font-mono font-bold text-[#1B365D]">98.12%</span>
+                </div>
+                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div id="prob-bar-0" class="h-full bg-[#1B365D] rounded-full transition-all duration-300" style="width: 98.12%"></div>
+                </div>
+              </div>
+
+              <!-- Versicolor Bar -->
+              <div>
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                  <span class="flex items-center gap-2 text-[#2E7D6B]">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#2E7D6B]"></span>
+                    Iris versicolor (Class 1)
+                  </span>
+                  <span id="prob-text-1" class="font-mono font-bold text-[#2E7D6B]">1.88%</span>
+                </div>
+                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div id="prob-bar-1" class="h-full bg-[#2E7D6B] rounded-full transition-all duration-300" style="width: 1.88%"></div>
+                </div>
+              </div>
+
+              <!-- Virginica Bar -->
+              <div>
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                  <span class="flex items-center gap-2 text-[#C86D51]">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#C86D51]"></span>
+                    Iris virginica (Class 2)
+                  </span>
+                  <span id="prob-text-2" class="font-mono font-bold text-[#C86D51]">0.00%</span>
+                </div>
+                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div id="prob-bar-2" class="h-full bg-[#C86D51] rounded-full transition-all duration-300" style="width: 0.00%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Interactive SVG Scatter Plot (User Specimen vs N=150 Corpus) -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="text-base font-bold text-[#1B365D]">Live Specimen Position in Petal Feature Space (N = 150)</h3>
+                <p class="text-xs text-slate-500">Real-time projection of your input specimen against all 150 canonical Iris records</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 text-xs font-medium">
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#1B365D]"></span>Setosa</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#2E7D6B]"></span>Versicolor</span>
+                <span class="flex items-center gap-1.5"><span class="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[9px] border-b-[#C86D51]"></span>Virginica</span>
+                <span class="flex items-center gap-1.5 font-bold text-amber-600"><span class="w-3 h-3 rounded-full bg-amber-400 border-2 border-slate-900"></span>Your Specimen</span>
+              </div>
+            </div>
+            <div id="live-scatter-container" class="w-full overflow-hidden"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 2: EXPLORATORY DATA ANALYSIS (EDA) VISUALS & STATISTICS           -->
+    <!-- ===================================================================== -->
+    <section id="panel-eda" class="tab-panel hidden space-y-6">
+
+      <!-- Top Row: Figure 1 (Distribution Boxplot/Range) & Figure 2 (Correlation Heatmap) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Figure 1: Feature Distribution Boxplot & Range Comparison -->
+        <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-[#2E7D6B]">Figure 1 • Univariate Distributions</span>
+              <h3 class="text-lg font-bold text-[#1B365D]">Morphological Feature Boxplot & Range Across Species</h3>
+            </div>
+            <!-- Feature Selector Pills -->
+            <div class="flex flex-wrap gap-1.5 bg-slate-100 p-1 rounded-xl">
+              <button onclick="selectEdaFeature(0)" id="eda-feat-0" class="eda-feat-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#1B365D] text-white shadow-sm transition">Sepal L</button>
+              <button onclick="selectEdaFeature(1)" id="eda-feat-1" class="eda-feat-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-[#1B365D] transition">Sepal W</button>
+              <button onclick="selectEdaFeature(2)" id="eda-feat-2" class="eda-feat-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-[#1B365D] transition">Petal L</button>
+              <button onclick="selectEdaFeature(3)" id="eda-feat-3" class="eda-feat-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-[#1B365D] transition">Petal W</button>
+            </div>
+          </div>
+          <div id="fig1-container" class="w-full"></div>
+          <p id="fig1-caption" class="text-xs text-slate-600 mt-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60 leading-relaxed">
+            <strong>Analytical Insight:</strong> Boxplots display Min, Q1 (25th), Median (50th), Mean (diamond), Q3 (75th), and Max values across all 50 specimens per species. Switch features above to inspect how petal dimensions isolate <em>Iris setosa</em> with zero distributional overlap.
+          </p>
+        </div>
+
+        <!-- Figure 2: Pearson Correlation Heatmap -->
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#2E7D6B]">Figure 2 • Collinearity Matrix</span>
+            <h3 class="text-lg font-bold text-[#1B365D] mb-1">Pearson Correlation Heatmap (r)</h3>
+            <p class="text-xs text-slate-500 mb-4">Pairwise linear correlation coefficients across N = 150 observations</p>
+            <div id="fig2-container" class="w-full"></div>
+          </div>
+          <p class="text-xs text-slate-600 mt-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60 leading-relaxed">
+            <strong>Key Finding:</strong> Petal length and petal width exhibit strong positive collinearity (<span class="font-mono font-bold text-[#1B365D]">r = +0.96</span>), while sepal width correlates negatively with petal length (<span class="font-mono font-bold text-[#C86D51]">r = -0.43</span>).
+          </p>
+        </div>
+      </div>
+
+      <!-- Middle Row: Figure 3 (Interactive Bivariate Scatter Plot) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#2E7D6B]">Figure 3 • Bivariate Class Separability</span>
+            <h3 class="text-lg font-bold text-[#1B365D]">Interactive Feature Space Projection (Hover Specimens for Details)</h3>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl self-start">
+            <button onclick="selectScatterMode('petal')" id="scatter-mode-petal"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#1B365D] text-white shadow-sm transition">
+              Petal Length vs. Petal Width
+            </button>
+            <button onclick="selectScatterMode('sepal')" id="scatter-mode-sepal"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-[#1B365D] transition">
+              Sepal Length vs. Sepal Width
+            </button>
+          </div>
+        </div>
+        <div id="fig3-container" class="w-full"></div>
+        <p id="fig3-caption" class="text-xs text-slate-600 mt-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60 leading-relaxed">
+          <strong>Petal Space Geometry:</strong> <em>Iris setosa</em> is separated by a >1.1 cm margin in petal length, whereas <em>Iris versicolor</em> and <em>Iris virginica</em> meet along a narrow diagonal transition zone near (4.9 cm, 1.7 cm).
+        </p>
+      </div>
+
+      <!-- Bottom Row: Complete Statistical Tables (Table 2 & Table 3 from Report) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Table 2: Global Univariate Descriptive Statistics -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 overflow-x-auto">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#1B365D]">Table 2 • Global Corpus Summary (N = 150)</span>
+          <h3 class="text-base font-bold text-slate-800 mb-3">Univariate Descriptive Statistics</h3>
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#1B365D] text-white">
+                <th class="py-2.5 px-3 rounded-tl-lg font-semibold">Statistic</th>
+                <th class="py-2.5 px-3 font-semibold text-right">Sepal L</th>
+                <th class="py-2.5 px-3 font-semibold text-right">Sepal W</th>
+                <th class="py-2.5 px-3 font-semibold text-right">Petal L</th>
+                <th class="py-2.5 px-3 rounded-tr-lg font-semibold text-right">Petal W</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 font-mono">
+              <tr class="hover:bg-slate-50"><td class="py-2 px-3 font-sans font-semibold text-slate-700">Count (n)</td><td class="py-2 px-3 text-right">150</td><td class="py-2 px-3 text-right">150</td><td class="py-2 px-3 text-right">150</td><td class="py-2 px-3 text-right">150</td></tr>
+              <tr class="hover:bg-slate-50 bg-slate-50/50"><td class="py-2 px-3 font-sans font-semibold text-slate-700">Mean</td><td class="py-2 px-3 text-right font-bold text-[#1B365D]">5.843</td><td class="py-2 px-3 text-right font-bold text-[#1B365D]">3.057</td><td class="py-2 px-3 text-right font-bold text-[#1B365D]">3.758</td><td class="py-2 px-3 text-right font-bold text-[#1B365D]">1.199</td></tr>
+              <tr class="hover:bg-slate-50"><td class="py-2 px-3 font-sans font-semibold text-slate-700">Std Dev (SD)</td><td class="py-2 px-3 text-right">0.828</td><td class="py-2 px-3 text-right">0.436</td><td class="py-2 px-3 text-right">1.765</td><td class="py-2 px-3 text-right">0.762</td></tr>
+              <tr class="hover:bg-slate-50 bg-slate-50/50"><td class="py-2 px-3 font-sans font-semibold text-slate-700">Minimum</td><td class="py-2 px-3 text-right">4.300</td><td class="py-2 px-3 text-right">2.000</td><td class="py-2 px-3 text-right">1.000</td><td class="py-2 px-3 text-right">0.100</td></tr>
+              <tr class="hover:bg-slate-50"><td class="py-2 px-3 font-sans font-semibold text-slate-700">25th % (Q1)</td><td class="py-2 px-3 text-right">5.100</td><td class="py-2 px-3 text-right">2.800</td><td class="py-2 px-3 text-right">1.600</td><td class="py-2 px-3 text-right">0.300</td></tr>
+              <tr class="hover:bg-slate-50 bg-slate-50/50"><td class="py-2 px-3 font-sans font-semibold text-slate-700">Median (Q2)</td><td class="py-2 px-3 text-right">5.800</td><td class="py-2 px-3 text-right">3.000</td><td class="py-2 px-3 text-right">4.350</td><td class="py-2 px-3 text-right">1.300</td></tr>
+              <tr class="hover:bg-slate-50"><td class="py-2 px-3 font-sans font-semibold text-slate-700">75th % (Q3)</td><td class="py-2 px-3 text-right">6.400</td><td class="py-2 px-3 text-right">3.300</td><td class="py-2 px-3 text-right">5.100</td><td class="py-2 px-3 text-right">1.800</td></tr>
+              <tr class="hover:bg-slate-50 bg-slate-50/50"><td class="py-2 px-3 font-sans font-semibold text-slate-700">Maximum</td><td class="py-2 px-3 text-right">7.900</td><td class="py-2 px-3 text-right">4.400</td><td class="py-2 px-3 text-right">6.900</td><td class="py-2 px-3 text-right">2.500</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table 3: Species-Disaggregated Mean ± SD -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 overflow-x-auto flex flex-col justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#2E7D6B]">Table 3 • Taxonomic Breakdown (n = 50 per class)</span>
+            <h3 class="text-base font-bold text-slate-800 mb-3">Species-Disaggregated Feature Profiles (Mean ± SD)</h3>
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#2E7D6B] text-white">
+                  <th class="py-2.5 px-3 rounded-tl-lg font-semibold">Species Class</th>
+                  <th class="py-2.5 px-2.5 font-semibold text-right">Sepal L (cm)</th>
+                  <th class="py-2.5 px-2.5 font-semibold text-right">Sepal W (cm)</th>
+                  <th class="py-2.5 px-2.5 font-semibold text-right">Petal L (cm)</th>
+                  <th class="py-2.5 px-2.5 rounded-tr-lg font-semibold text-right">Petal W (cm)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 font-mono">
+                <tr class="hover:bg-slate-50">
+                  <td class="py-3 px-3 font-sans font-bold text-[#1B365D] italic">Iris setosa (0)</td>
+                  <td class="py-3 px-2.5 text-right">5.006 ± 0.352</td>
+                  <td class="py-3 px-2.5 text-right">3.428 ± 0.379</td>
+                  <td class="py-3 px-2.5 text-right">1.462 ± 0.174</td>
+                  <td class="py-3 px-2.5 text-right">0.246 ± 0.105</td>
+                </tr>
+                <tr class="hover:bg-slate-50 bg-slate-50/50">
+                  <td class="py-3 px-3 font-sans font-bold text-[#2E7D6B] italic">Iris versicolor (1)</td>
+                  <td class="py-3 px-2.5 text-right">5.936 ± 0.516</td>
+                  <td class="py-3 px-2.5 text-right">2.770 ± 0.314</td>
+                  <td class="py-3 px-2.5 text-right">4.260 ± 0.470</td>
+                  <td class="py-3 px-2.5 text-right">1.326 ± 0.198</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="py-3 px-3 font-sans font-bold text-[#C86D51] italic">Iris virginica (2)</td>
+                  <td class="py-3 px-2.5 text-right">6.588 ± 0.636</td>
+                  <td class="py-3 px-2.5 text-right">2.974 ± 0.322</td>
+                  <td class="py-3 px-2.5 text-right">5.552 ± 0.552</td>
+                  <td class="py-3 px-2.5 text-right">2.026 ± 0.275</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-4 bg-slate-50 rounded-xl p-3.5 border border-slate-200/70 text-xs text-slate-600 space-y-1.5">
+            <div class="font-bold text-[#1B365D]">Preprocessing & Stratified Split Protocol</div>
+            <p>• <strong>Train / Test Partition:</strong> 80/20 stratified split (<span class="font-mono">random_state=42</span>) yielding 120 training specimens (40/class) and 30 hold-out test specimens (10/class).</p>
+            <p>• <strong>Leak-Free Scaling:</strong> <span class="font-mono">StandardScaler</span> fitted strictly on the 120 training samples (<span class="font-mono">μ = [5.8417, 3.0483, 3.7700, 1.2050]</span>, <span class="font-mono">σ = [0.8375, 0.4466, 1.7611, 0.7595]</span>).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 3: MODEL EVALUATION & MULTI-ALGORITHM BENCHMARKS                  -->
+    <!-- ===================================================================== -->
+    <section id="panel-evaluation" class="tab-panel hidden space-y-6">
+
+      <!-- Top Metric KPI Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Hold-Out Accuracy</div>
+          <div class="text-2xl font-extrabold text-[#1B365D] font-mono mt-1">93.33%</div>
+          <div class="text-xs text-slate-500 mt-0.5">28 / 30 Test Specimens</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Macro Precision</div>
+          <div class="text-2xl font-extrabold text-[#2E7D6B] font-mono mt-1">93.33%</div>
+          <div class="text-xs text-slate-500 mt-0.5">Unweighted 3-Class Mean</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Macro Recall</div>
+          <div class="text-2xl font-extrabold text-[#2E7D6B] font-mono mt-1">93.33%</div>
+          <div class="text-xs text-slate-500 mt-0.5">Balanced Sensitivity</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Macro F1-Score</div>
+          <div class="text-2xl font-extrabold text-[#1B365D] font-mono mt-1">93.33%</div>
+          <div class="text-xs text-slate-500 mt-0.5">Harmonic Mean</div>
+        </div>
+        <div class="col-span-2 sm:col-span-1 bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">OvR ROC-AUC</div>
+          <div class="text-2xl font-extrabold text-[#C86D51] font-mono mt-1">99.67%</div>
+          <div class="text-xs text-slate-500 mt-0.5">5-Fold CV: 95.33%</div>
+        </div>
+      </div>
+
+      <!-- Row 1: Figure 4 (Interactive Confusion Matrix) + Table 5 (Classification Report) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Figure 4: Confusion Matrix -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#2E7D6B]">Figure 4 • Hold-Out Error Decomposition (n = 30)</span>
+          <h3 class="text-lg font-bold text-[#1B365D] mb-1">Confusion Matrix — Multinomial Logistic Regression</h3>
+          <p class="text-xs text-slate-500 mb-4">Hover over any cell to inspect true positives and symmetric boundary errors</p>
+          <div id="fig4-container" class="w-full"></div>
+          <p class="text-xs text-slate-600 mt-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60 leading-relaxed">
+            <strong>Error Analysis:</strong> 100% of <em>Iris setosa</em> specimens (10/10) were classified without error. Only 2 symmetric misclassifications occurred between <em>Iris versicolor</em> and <em>Iris virginica</em> along their overlapping petal boundary.
+          </p>
+        </div>
+
+        <!-- Table 5 & Table 4: Per-Class Classification Report & Learned Model Weights -->
+        <div class="lg:col-span-6 space-y-6">
+          <!-- Table 5 -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 overflow-x-auto">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#1B365D]">Table 5 • Per-Class Evaluation Metrics</span>
+            <h3 class="text-base font-bold text-slate-800 mb-3">Hold-Out Test Classification Report (n = 30)</h3>
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#1B365D] text-white">
+                  <th class="py-2.5 px-3 rounded-tl-lg font-semibold">Target Species Class</th>
+                  <th class="py-2.5 px-3 font-semibold text-right">Precision</th>
+                  <th class="py-2.5 px-3 font-semibold text-right">Recall</th>
+                  <th class="py-2.5 px-3 font-semibold text-right">F1-Score</th>
+                  <th class="py-2.5 px-3 rounded-tr-lg font-semibold text-right">Support</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 font-mono">
+                <tr class="hover:bg-slate-50"><td class="py-2.5 px-3 font-sans font-bold text-[#1B365D] italic">Iris setosa (0)</td><td class="py-2.5 px-3 text-right text-emerald-700 font-bold">100.00%</td><td class="py-2.5 px-3 text-right text-emerald-700 font-bold">100.00%</td><td class="py-2.5 px-3 text-right text-emerald-700 font-bold">100.00%</td><td class="py-2.5 px-3 text-right">10</td></tr>
+                <tr class="hover:bg-slate-50 bg-slate-50/50"><td class="py-2.5 px-3 font-sans font-bold text-[#2E7D6B] italic">Iris versicolor (1)</td><td class="py-2.5 px-3 text-right">90.00%</td><td class="py-2.5 px-3 text-right">90.00%</td><td class="py-2.5 px-3 text-right">90.00%</td><td class="py-2.5 px-3 text-right">10</td></tr>
+                <tr class="hover:bg-slate-50"><td class="py-2.5 px-3 font-sans font-bold text-[#C86D51] italic">Iris virginica (2)</td><td class="py-2.5 px-3 text-right">90.00%</td><td class="py-2.5 px-3 text-right">90.00%</td><td class="py-2.5 px-3 text-right">90.00%</td><td class="py-2.5 px-3 text-right">10</td></tr>
+                <tr class="bg-slate-100 font-bold"><td class="py-2.5 px-3 font-sans text-slate-800">Macro / Weighted Avg</td><td class="py-2.5 px-3 text-right text-[#1B365D]">93.33%</td><td class="py-2.5 px-3 text-right text-[#1B365D]">93.33%</td><td class="py-2.5 px-3 text-right text-[#1B365D]">93.33%</td><td class="py-2.5 px-3 text-right">30</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table 4: Converged Standardized Parameter Weights -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 overflow-x-auto">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#2E7D6B]">Table 4 • Converged L-BFGS Model Parameters</span>
+            <h3 class="text-base font-bold text-slate-800 mb-3">Standardized Feature Weights (W) & Intercepts (b)</h3>
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#2E7D6B] text-white">
+                  <th class="py-2 px-2.5 rounded-tl-lg font-semibold">Class</th>
+                  <th class="py-2 px-2 font-semibold text-right">Sepal L (w1)</th>
+                  <th class="py-2 px-2 font-semibold text-right">Sepal W (w2)</th>
+                  <th class="py-2 px-2 font-semibold text-right">Petal L (w3)</th>
+                  <th class="py-2 px-2 font-semibold text-right">Petal W (w4)</th>
+                  <th class="py-2 px-2.5 rounded-tr-lg font-semibold text-right">Bias (b)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 font-mono">
+                <tr class="hover:bg-slate-50"><td class="py-2 px-2.5 font-sans font-bold text-[#1B365D] italic">Setosa</td><td class="py-2 px-2 text-right">-1.0889</td><td class="py-2 px-2 text-right">+1.0242</td><td class="py-2 px-2 text-right font-bold text-rose-700">-1.7991</td><td class="py-2 px-2 text-right font-bold text-rose-700">-1.6862</td><td class="py-2 px-2.5 text-right">-0.3056</td></tr>
+                <tr class="hover:bg-slate-50 bg-slate-50/50"><td class="py-2 px-2.5 font-sans font-bold text-[#2E7D6B] italic">Versicolor</td><td class="py-2 px-2 text-right">+0.5363</td><td class="py-2 px-2 text-right">-0.3605</td><td class="py-2 px-2 text-right">-0.2041</td><td class="py-2 px-2 text-right">-0.8080</td><td class="py-2 px-2.5 text-right">+1.9086</td></tr>
+                <tr class="hover:bg-slate-50"><td class="py-2 px-2.5 font-sans font-bold text-[#C86D51] italic">Virginica</td><td class="py-2 px-2 text-right">+0.5526</td><td class="py-2 px-2 text-right">-0.6637</td><td class="py-2 px-2 text-right font-bold text-emerald-700">+2.0031</td><td class="py-2 px-2 text-right font-bold text-emerald-700">+2.4942</td><td class="py-2 px-2.5 text-right">-1.6030</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Figure 5 (Multi-Algorithm Benchmark Chart) & Figure 6 (Feature Importance) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Figure 5 -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#2E7D6B]">Figure 5 • Multi-Algorithm Benchmarking</span>
+          <h3 class="text-lg font-bold text-[#1B365D] mb-1">Comparative Performance Across Four Classifiers</h3>
+          <p class="text-xs text-slate-500 mb-4">Hold-Out Accuracy, 5-Fold Cross-Validation Mean, and Macro F1-Score</p>
+          <div id="fig5-container" class="w-full"></div>
+        </div>
+
+        <!-- Figure 6 -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#2E7D6B]">Figure 6 • Feature Discriminative Power</span>
+          <h3 class="text-lg font-bold text-[#1B365D] mb-1">Parametric Weight Magnitude vs. Tree Gini Importance</h3>
+          <p class="text-xs text-slate-500 mb-4">Consensus ranking confirming Petal Width & Petal Length dominance</p>
+          <div id="fig6-container" class="w-full"></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Table 6 (Complete Multi-Algorithm Comparison Table) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 overflow-x-auto">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-[#1B365D]">Table 6 • Complete Benchmark Summary</span>
+        <h3 class="text-base font-bold text-slate-800 mb-3">Comparative Evaluation Across Candidate Supervised Learning Algorithms</h3>
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-[#1B365D] text-white">
+              <th class="py-3 px-4 rounded-tl-lg font-semibold">Classification Algorithm</th>
+              <th class="py-3 px-3 font-semibold text-right">Hold-Out Accuracy</th>
+              <th class="py-3 px-3 font-semibold text-right">Macro Precision</th>
+              <th class="py-3 px-3 font-semibold text-right">Macro Recall</th>
+              <th class="py-3 px-3 font-semibold text-right">Macro F1-Score</th>
+              <th class="py-3 px-3 font-semibold text-right">ROC-AUC (OvR)</th>
+              <th class="py-3 px-4 rounded-tr-lg font-semibold text-right">5-Fold CV (Mean ± SD)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 font-mono">
+            <tr class="bg-blue-50/50 hover:bg-blue-50">
+              <td class="py-3 px-4 font-sans font-bold text-[#1B365D]">Logistic Regression (Primary L2)</td>
+              <td class="py-3 px-3 text-right font-bold">93.33%</td>
+              <td class="py-3 px-3 text-right">93.33%</td>
+              <td class="py-3 px-3 text-right">93.33%</td>
+              <td class="py-3 px-3 text-right">93.33%</td>
+              <td class="py-3 px-3 text-right font-bold text-[#2E7D6B]">99.67%</td>
+              <td class="py-3 px-4 text-right font-bold">95.33% ± 4.52%</td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-sans font-semibold text-slate-800">Support Vector Machine (RBF Kernel)</td>
+              <td class="py-3 px-3 text-right font-bold text-emerald-700">96.67%</td>
+              <td class="py-3 px-3 text-right">96.97%</td>
+              <td class="py-3 px-3 text-right">96.67%</td>
+              <td class="py-3 px-3 text-right">96.66%</td>
+              <td class="py-3 px-3 text-right">99.67%</td>
+              <td class="py-3 px-4 text-right">95.33% ± 4.52%</td>
+            </tr>
+            <tr class="hover:bg-slate-50 bg-slate-50/50">
+              <td class="py-3 px-4 font-sans font-semibold text-slate-800">K-Nearest Neighbors (k = 5)</td>
+              <td class="py-3 px-3 text-right">93.33%</td>
+              <td class="py-3 px-3 text-right">94.44%</td>
+              <td class="py-3 px-3 text-right">93.33%</td>
+              <td class="py-3 px-3 text-right">93.27%</td>
+              <td class="py-3 px-3 text-right">99.33%</td>
+              <td class="py-3 px-4 text-right font-bold text-emerald-700">96.67% ± 3.65%</td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-sans font-semibold text-slate-800">Random Forest Ensemble (100 Trees)</td>
+              <td class="py-3 px-3 text-right">90.00%</td>
+              <td class="py-3 px-3 text-right">90.24%</td>
+              <td class="py-3 px-3 text-right">90.00%</td>
+              <td class="py-3 px-3 text-right">89.97%</td>
+              <td class="py-3 px-3 text-right">98.67%</td>
+              <td class="py-3 px-4 text-right">94.67% ± 2.67%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <div><strong>Iris Botanical Species Classifier & ML Analytics Dashboard</strong> • Assignment 1 Production Web Application</div>
+      <div class="font-mono">Scikit-Learn Iris (N=150) • Multinomial Logistic Regression • Vercel Static Deployment</div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT: EXACT MODEL WEIGHTS, CANONICAL DATASET (N=150) & CHARTS   -->
+  <!-- ===================================================================== -->
   <script>
-    const TARGET_NAMES = ["Iris Setosa", "Iris Versicolor", "Iris Virginica"];
+    // 1. Exact Fitted StandardScaler & Multinomial Logistic Regression Parameters
+    const MODEL = {
+      mean: [5.8417, 3.0483, 3.7700, 1.2050],
+      scale: [0.8375, 0.4466, 1.7611, 0.7595],
+      classes: [
+        {
+          id: 0,
+          name: "Iris setosa",
+          short: "Setosa",
+          color: "#1B365D",
+          weights: [-1.0889, 1.0242, -1.7991, -1.6862],
+          intercept: -0.3056,
+          desc: "Characterized by compact, narrow petals (1.0–1.9 cm length; 0.1–0.6 cm width) paired with comparatively broad sepals (mean 3.43 cm). Completely linearly separable from both sister taxa across petal feature space."
+        },
+        {
+          id: 1,
+          name: "Iris versicolor",
+          short: "Versicolor",
+          color: "#2E7D6B",
+          weights: [0.5363, -0.3605, -0.2041, -0.8080],
+          intercept: 1.9086,
+          desc: "Intermediate botanical morphology with moderate petal lengths (3.0–5.1 cm, mean 4.26 cm) and narrower sepals (mean 2.77 cm). Occupies the central transition manifold between Iris setosa and Iris virginica."
+        },
+        {
+          id: 2,
+          name: "Iris virginica",
+          short: "Virginica",
+          color: "#C86D51",
+          weights: [0.5526, -0.6637, 2.0031, 2.4942],
+          intercept: -1.6030,
+          desc: "Largest floral dimensions in the corpus, exhibiting elongated sepals (mean 6.59 cm) and broad, long petals (mean 5.55 cm × 2.03 cm). Strongly driven by positive petal width (+2.4942) and petal length (+2.0031) coefficients."
+        }
+      ]
+    };
+
+    // 2. Canonical Fisher/Anderson Iris Dataset (All 150 Records: [SL, SW, PL, PW, classIndex])
     const IRIS_DATA = [
+      // Setosa (50)
       [5.1,3.5,1.4,0.2,0],[4.9,3.0,1.4,0.2,0],[4.7,3.2,1.3,0.2,0],[4.6,3.1,1.5,0.2,0],[5.0,3.6,1.4,0.2,0],
       [5.4,3.9,1.7,0.4,0],[4.6,3.4,1.4,0.3,0],[5.0,3.4,1.5,0.2,0],[4.4,2.9,1.4,0.2,0],[4.9,3.1,1.5,0.1,0],
       [5.4,3.7,1.5,0.2,0],[4.8,3.4,1.6,0.2,0],[4.8,3.0,1.4,0.1,0],[4.3,3.0,1.1,0.1,0],[5.8,4.0,1.2,0.2,0],
@@ -146,6 +774,7 @@
       [5.0,3.2,1.2,0.2,0],[5.5,3.5,1.3,0.2,0],[4.9,3.6,1.4,0.1,0],[4.4,3.0,1.3,0.2,0],[5.1,3.4,1.5,0.2,0],
       [5.0,3.5,1.3,0.3,0],[4.5,2.3,1.3,0.3,0],[4.4,3.2,1.3,0.2,0],[5.0,3.5,1.6,0.6,0],[5.1,3.8,1.9,0.4,0],
       [4.8,3.0,1.4,0.3,0],[5.1,3.8,1.6,0.2,0],[4.6,3.2,1.4,0.2,0],[5.3,3.7,1.5,0.2,0],[5.0,3.3,1.4,0.2,0],
+      // Versicolor (50)
       [7.0,3.2,4.7,1.4,1],[6.4,3.2,4.5,1.5,1],[6.9,3.1,4.9,1.5,1],[5.5,2.3,4.0,1.3,1],[6.5,2.8,4.6,1.5,1],
       [5.7,2.8,4.5,1.3,1],[6.3,3.3,4.7,1.6,1],[4.9,2.4,3.3,1.0,1],[6.6,2.9,4.6,1.3,1],[5.2,2.7,3.9,1.4,1],
       [5.0,2.0,3.5,1.0,1],[5.9,3.0,4.2,1.5,1],[6.0,2.2,4.0,1.0,1],[6.1,2.9,4.7,1.4,1],[5.6,2.9,3.6,1.3,1],
@@ -156,6 +785,7 @@
       [6.0,3.4,4.5,1.6,1],[6.7,3.1,4.7,1.5,1],[6.3,2.3,4.4,1.3,1],[5.6,3.0,4.1,1.3,1],[5.5,2.5,4.0,1.3,1],
       [5.5,2.6,4.4,1.2,1],[6.1,3.0,4.6,1.4,1],[5.8,2.6,4.0,1.2,1],[5.0,2.3,3.3,1.0,1],[5.6,2.7,4.2,1.3,1],
       [5.7,3.0,4.2,1.2,1],[5.7,2.9,4.2,1.3,1],[6.2,2.9,4.3,1.3,1],[5.1,2.5,3.0,1.1,1],[5.7,2.8,4.1,1.3,1],
+      // Virginica (50)
       [6.3,3.3,6.0,2.5,2],[5.8,2.7,5.1,1.9,2],[7.1,3.0,5.9,2.1,2],[6.3,2.9,5.6,1.8,2],[6.5,3.0,5.8,2.2,2],
       [7.6,3.0,6.6,2.1,2],[4.9,2.5,4.5,1.7,2],[7.3,2.9,6.3,1.8,2],[6.7,2.5,5.8,1.8,2],[7.2,3.6,6.1,2.5,2],
       [6.5,3.2,5.1,2.0,2],[6.4,2.7,5.3,1.9,2],[6.8,3.0,5.5,2.1,2],[5.7,2.5,5.0,2.0,2],[5.8,2.8,5.1,2.4,2],
@@ -168,58 +798,551 @@
       [6.7,3.0,5.2,2.3,2],[6.3,2.5,5.0,1.9,2],[6.5,3.0,5.2,2.0,2],[6.2,3.4,5.4,2.3,2],[5.9,3.0,5.1,1.8,2]
     ];
 
-    function updateVal(inputId, spanId) {
-      document.getElementById(spanId).innerText = parseFloat(document.getElementById(inputId).value).toFixed(1) + " cm";
+    // Current user input state
+    let currentInputs = { sl: 5.1, sw: 3.5, pl: 1.4, pw: 0.2 };
+    let currentEdaFeature = 0;
+    let currentScatterMode = 'petal';
+
+    // Tooltip Helper
+    const tooltip = document.getElementById('chart-tooltip');
+    function showTooltip(evt, html) {
+      tooltip.innerHTML = html;
+      tooltip.classList.remove('hidden');
+      const pad = 12;
+      let left = evt.clientX + pad;
+      let top = evt.clientY + pad;
+      if (left + 220 > window.innerWidth) left = evt.clientX - 220;
+      if (top + 90 > window.innerHeight) top = evt.clientY - 90;
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
+    }
+    function hideTooltip() {
+      tooltip.classList.add('hidden');
     }
 
-    function setPreset(sl, sw, pl, pw) {
-      document.getElementById("sepal_length").value = sl;
-      document.getElementById("sepal_width").value = sw;
-      document.getElementById("petal_length").value = pl;
-      document.getElementById("petal_width").value = pw;
-      updateVal("sepal_length", "sl_val");
-      updateVal("sepal_width", "sw_val");
-      updateVal("petal_length", "pl_val");
-      updateVal("petal_width", "pw_val");
-      predictSpecies();
-    }
+    // Tab Navigation
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+      document.getElementById('panel-' + tabId).classList.remove('hidden');
 
-    function predictSpecies() {
-      const sl = parseFloat(document.getElementById("sepal_length").value);
-      const sw = parseFloat(document.getElementById("sepal_width").value);
-      const pl = parseFloat(document.getElementById("petal_length").value);
-      const pw = parseFloat(document.getElementById("petal_width").value);
-
-      const distances = IRIS_DATA.map(r => ({
-        dist: Math.hypot(sl - r[0], sw - r[1], pl - r[2], pw - r[3]),
-        cls: r[4]
-      })).sort((a, b) => a.dist - b.dist);
-
-      const weights = [0, 0, 0];
-      for (const n of distances.slice(0, 15)) {
-        weights[n.cls] += 1 / (n.dist + 1e-6);
-      }
-      const total = weights.reduce((a, b) => a + b, 0);
-      const probs = weights.map(w => (w / total) * 100);
-      const predIdx = probs.indexOf(Math.max(...probs));
-
-      document.getElementById("pred_species").innerText = TARGET_NAMES[predIdx];
-      document.getElementById("pred_conf").innerText = `Confidence: ${probs[predIdx].toFixed(2)}%`;
-
-      const container = document.getElementById("prob_bars");
-      container.innerHTML = "";
-      TARGET_NAMES.forEach((label, i) => {
-        const pct = probs[i];
-        container.innerHTML += `
-          <div class="bar-group">
-            <div class="bar-label"><span>${label}</span><span>${pct.toFixed(2)}%</span></div>
-            <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
-          </div>
-        `;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-[#1B365D]', 'shadow-md');
+        btn.classList.add('text-slate-200', 'hover:bg-white/10');
       });
+      const activeBtn = document.getElementById('tab-btn-' + tabId);
+      activeBtn.classList.remove('text-slate-200', 'hover:bg-white/10');
+      activeBtn.classList.add('bg-white', 'text-[#1B365D]', 'shadow-md');
+
+      if (tabId === 'eda') {
+        renderFig1(currentEdaFeature);
+        renderFig2();
+        renderFig3(currentScatterMode);
+      } else if (tabId === 'evaluation') {
+        renderFig4();
+        renderFig5();
+        renderFig6();
+      } else {
+        renderLiveScatter();
+      }
     }
 
-    window.onload = predictSpecies;
+    // Input Synchronization & Presets
+    function syncFromRange(key) {
+      const val = parseFloat(document.getElementById('range-' + key).value);
+      document.getElementById('num-' + key).value = val.toFixed(1);
+      currentInputs[key] = val;
+      runInference();
+    }
+
+    function syncFromNumber(key) {
+      const input = document.getElementById('num-' + key);
+      let val = parseFloat(input.value);
+      if (isNaN(val)) return;
+      const min = parseFloat(input.min);
+      const max = parseFloat(input.max);
+      val = Math.max(min, Math.min(max, val));
+      document.getElementById('range-' + key).value = val;
+      currentInputs[key] = val;
+      runInference();
+    }
+
+    function applyPreset(sl, sw, pl, pw) {
+      currentInputs = { sl, sw, pl, pw };
+      ['sl', 'sw', 'pl', 'pw'].forEach(k => {
+        document.getElementById('range-' + k).value = currentInputs[k];
+        document.getElementById('num-' + k).value = currentInputs[k].toFixed(1);
+      });
+      runInference();
+    }
+
+    // Client-Side Multinomial Logistic Regression Inference Engine
+    function runInference() {
+      const x = [currentInputs.sl, currentInputs.sw, currentInputs.pl, currentInputs.pw];
+
+      // 1. Standardize via fitted training statistics: z = (x - mean) / scale
+      const z = x.map((val, i) => (val - MODEL.mean[i]) / MODEL.scale[i]);
+      document.getElementById('zscore-readout').textContent =
+        `z = [${z.map(v => (v >= 0 ? '+' : '') + v.toFixed(4)).join(', ')}]`;
+
+      // 2. Compute linear logits: eta_k = w_k^T z + b_k
+      const logits = MODEL.classes.map(cls => {
+        const dot = cls.weights.reduce((acc, w, i) => acc + w * z[i], 0);
+        return dot + cls.intercept;
+      });
+
+      // 3. Numerically stable Softmax
+      const maxLogit = Math.max(...logits);
+      const exps = logits.map(l => Math.exp(l - maxLogit));
+      const sumExp = exps.reduce((a, b) => a + b, 0);
+      const probs = exps.map(e => e / sumExp);
+
+      // Find argmax class
+      let bestIdx = 0;
+      if (probs[1] > probs[bestIdx]) bestIdx = 1;
+      if (probs[2] > probs[bestIdx]) bestIdx = 2;
+
+      const bestClass = MODEL.classes[bestIdx];
+      const topProbPct = (probs[bestIdx] * 100).toFixed(2);
+
+      // Update UI Cards & Progress Bars
+      const nameEl = document.getElementById('pred-species-name');
+      nameEl.textContent = bestClass.name;
+      nameEl.style.color = bestClass.color;
+
+      document.getElementById('species-badge-icon').style.backgroundColor = bestClass.color;
+      document.getElementById('pred-species-confidence').innerHTML =
+        `Softmax Posterior Confidence: <span class="font-mono font-bold" style="color:${bestClass.color}">${topProbPct}%</span>`;
+      document.getElementById('pred-species-desc').textContent = bestClass.desc;
+
+      const pillEl = document.getElementById('pred-margin-pill');
+      if (probs[bestIdx] >= 0.85) {
+        pillEl.textContent = "High-Confidence Region";
+        pillEl.className = "self-start sm:self-center px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200";
+      } else {
+        pillEl.textContent = "Decision Boundary Transition Zone";
+        pillEl.className = "self-start sm:self-center px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200";
+      }
+
+      probs.forEach((p, idx) => {
+        const pct = (p * 100).toFixed(2) + '%';
+        document.getElementById('prob-text-' + idx).textContent = pct;
+        document.getElementById('prob-bar-' + idx).style.width = pct;
+      });
+
+      renderLiveScatter();
+    }
+
+    // Render Live Scatter Plot in Tab 1 (Petal Length vs Petal Width + User Marker)
+    function renderLiveScatter() {
+      const container = document.getElementById('live-scatter-container');
+      const W = 640, H = 270;
+      const pad = { top: 18, right: 24, bottom: 38, left: 48 };
+      const plotW = W - pad.left - pad.right;
+      const plotH = H - pad.top - pad.bottom;
+
+      const xMin = 0.8, xMax = 7.2;
+      const yMin = 0.0, yMax = 2.7;
+      const sx = v => pad.left + ((v - xMin) / (xMax - xMin)) * plotW;
+      const sy = v => pad.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto select-none">`;
+
+      // Gridlines
+      [1, 2, 3, 4, 5, 6, 7].forEach(gx => {
+        const x = sx(gx);
+        svg += `<line x1="${x}" y1="${pad.top}" x2="${x}" y2="${pad.top + plotH}" stroke="#E2E8F0" stroke-dasharray="3,3" />`;
+        svg += `<text x="${x}" y="${H - 16}" text-anchor="middle" font-size="10" fill="#64748B" font-family="JetBrains Mono">${gx.toFixed(1)}</text>`;
+      });
+      [0.0, 0.5, 1.0, 1.5, 2.0, 2.5].forEach(gy => {
+        const y = sy(gy);
+        svg += `<line x1="${pad.left}" y1="${y}" x2="${pad.left + plotW}" y2="${y}" stroke="#E2E8F0" stroke-dasharray="3,3" />`;
+        svg += `<text x="${pad.left - 8}" y="${y + 3}" text-anchor="end" font-size="10" fill="#64748B" font-family="JetBrains Mono">${gy.toFixed(1)}</text>`;
+      });
+
+      // Axes labels
+      svg += `<text x="${pad.left + plotW / 2}" y="${H - 2}" text-anchor="middle" font-size="11" font-weight="600" fill="#1B365D">Petal Length (cm)</text>`;
+      svg += `<text x="14" y="${pad.top + plotH / 2}" text-anchor="middle" font-size="11" font-weight="600" fill="#1B365D" transform="rotate(-90 14 ${pad.top + plotH / 2})">Petal Width (cm)</text>`;
+
+      // Dataset points
+      IRIS_DATA.forEach(d => {
+        const cx = sx(d[2]);
+        const cy = sy(d[3]);
+        const c = d[4];
+        if (c === 0) {
+          svg += `<circle cx="${cx}" cy="${cy}" r="3.6" fill="#1B365D" fill-opacity="0.78" />`;
+        } else if (c === 1) {
+          svg += `<rect x="${cx - 3.3}" y="${cy - 3.3}" width="6.6" height="6.6" fill="#2E7D6B" fill-opacity="0.82" />`;
+        } else {
+          svg += `<polygon points="${cx},${cy - 4.3} ${cx - 4},${cy + 3.4} ${cx + 4},${cy + 3.4}" fill="#C86D51" fill-opacity="0.85" />`;
+        }
+      });
+
+      // User Specimen Crosshair & Pulsing Target
+      const ux = sx(currentInputs.pl);
+      const uy = sy(currentInputs.pw);
+      svg += `<line x1="${ux}" y1="${pad.top}" x2="${ux}" y2="${pad.top + plotH}" stroke="#F59E0B" stroke-width="1.2" stroke-dasharray="4,3" />`;
+      svg += `<line x1="${pad.left}" y1="${uy}" x2="${pad.left + plotW}" y2="${uy}" stroke="#F59E0B" stroke-width="1.2" stroke-dasharray="4,3" />`;
+      svg += `<circle cx="${ux}" cy="${uy}" r="11" fill="#F59E0B" fill-opacity="0.35" class="pulse-ring" />`;
+      svg += `<circle cx="${ux}" cy="${uy}" r="6.5" fill="#FBBF24" stroke="#0F172A" stroke-width="2.2" />`;
+
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    // =====================================================================
+    // TAB 2 CHARTS: FIGURE 1, FIGURE 2, FIGURE 3
+    // =====================================================================
+    function selectEdaFeature(idx) {
+      currentEdaFeature = idx;
+      document.querySelectorAll('.eda-feat-btn').forEach((btn, i) => {
+        if (i === idx) {
+          btn.classList.add('bg-[#1B365D]', 'text-white', 'shadow-sm');
+          btn.classList.remove('text-slate-600');
+        } else {
+          btn.classList.remove('bg-[#1B365D]', 'text-white', 'shadow-sm');
+          btn.classList.add('text-slate-600');
+        }
+      });
+      renderFig1(idx);
+    }
+
+    function quantile(sorted, q) {
+      const pos = (sorted.length - 1) * q;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+    }
+
+    function renderFig1(featIdx) {
+      const featNames = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"];
+      const container = document.getElementById('fig1-container');
+      const W = 560, H = 265;
+      const pad = { top: 20, right: 25, bottom: 38, left: 52 };
+      const plotW = W - pad.left - pad.right;
+      const plotH = H - pad.top - pad.bottom;
+
+      const allVals = IRIS_DATA.map(d => d[featIdx]);
+      const rawMin = Math.min(...allVals);
+      const rawMax = Math.max(...allVals);
+      const margin = (rawMax - rawMin) * 0.12;
+      const yMin = Math.max(0, rawMin - margin);
+      const yMax = rawMax + margin;
+
+      const sy = v => pad.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto select-none">`;
+
+      // Horizontal Gridlines
+      for (let i = 0; i <= 5; i++) {
+        const val = yMin + (i / 5) * (yMax - yMin);
+        const y = sy(val);
+        svg += `<line x1="${pad.left}" y1="${y}" x2="${pad.left + plotW}" y2="${y}" stroke="#E2E8F0" stroke-dasharray="3,3" />`;
+        svg += `<text x="${pad.left - 8}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="#64748B" font-family="JetBrains Mono">${val.toFixed(1)}</text>`;
+      }
+
+      svg += `<text x="15" y="${pad.top + plotH / 2}" text-anchor="middle" font-size="11" font-weight="600" fill="#1B365D" transform="rotate(-90 15 ${pad.top + plotH / 2})">${featNames[featIdx]}</text>`;
+
+      MODEL.classes.forEach((cls, cIdx) => {
+        const vals = IRIS_DATA.filter(d => d[4] === cIdx).map(d => d[featIdx]).sort((a, b) => a - b);
+        const min = vals[0];
+        const q1 = quantile(vals, 0.25);
+        const med = quantile(vals, 0.50);
+        const q3 = quantile(vals, 0.75);
+        const max = vals[vals.length - 1];
+        const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+
+        const cx = pad.left + ((cIdx + 0.5) / 3) * plotW;
+        const boxW = 54;
+
+        // Whisker line
+        svg += `<line x1="${cx}" y1="${sy(min)}" x2="${cx}" y2="${sy(max)}" stroke="${cls.color}" stroke-width="2" />`;
+        svg += `<line x1="${cx - 14}" y1="${sy(min)}" x2="${cx + 14}" y2="${sy(min)}" stroke="${cls.color}" stroke-width="2" />`;
+        svg += `<line x1="${cx - 14}" y1="${sy(max)}" x2="${cx + 14}" y2="${sy(max)}" stroke="${cls.color}" stroke-width="2" />`;
+
+        // IQR Box
+        const boxTop = sy(q3);
+        const boxH = Math.max(2, sy(q1) - sy(q3));
+        svg += `<rect x="${cx - boxW / 2}" y="${boxTop}" width="${boxW}" height="${boxH}" rx="6" fill="${cls.color}" fill-opacity="0.22" stroke="${cls.color}" stroke-width="2.2"
+          onmousemove="showTooltip(evt, '<strong>${cls.name}</strong><br/>Min: ${min.toFixed(2)} | Q1: ${q1.toFixed(2)}<br/>Median: ${med.toFixed(2)} | Mean: ${mean.toFixed(2)}<br/>Q3: ${q3.toFixed(2)} | Max: ${max.toFixed(2)}')"
+          onmouseout="hideTooltip()" class="cursor-pointer" />`;
+
+        // Median line
+        svg += `<line x1="${cx - boxW / 2}" y1="${sy(med)}" x2="${cx + boxW / 2}" y2="${sy(med)}" stroke="${cls.color}" stroke-width="3" />`;
+
+        // Mean diamond
+        const my = sy(mean);
+        svg += `<polygon points="${cx},${my - 5} ${cx + 5},${my} ${cx},${my + 5} ${cx - 5},${my}" fill="#FFFFFF" stroke="${cls.color}" stroke-width="2" />`;
+
+        // X Axis Label
+        svg += `<text x="${cx}" y="${H - 12}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${cls.color}">${cls.name}</text>`;
+      });
+
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    function renderFig2() {
+      const labels = ["Sepal L", "Sepal W", "Petal L", "Petal W"];
+      const corr = [
+        [1.00, -0.12, 0.87, 0.82],
+        [-0.12, 1.00, -0.43, -0.37],
+        [0.87, -0.43, 1.00, 0.96],
+        [0.82, -0.37, 0.96, 1.00]
+      ];
+      const container = document.getElementById('fig2-container');
+      const W = 400, H = 265;
+      const leftPad = 66, topPad = 14, cellW = 74, cellH = 52;
+
+      function cellColor(r) {
+        if (r >= 0.8) return { bg: "#1B365D", text: "#FFFFFF" };
+        if (r >= 0.4) return { bg: "#3B6998", text: "#FFFFFF" };
+        if (r >= 0.0) return { bg: "#CBD5E1", text: "#0F172A" };
+        if (r >= -0.3) return { bg: "#FDE68A", text: "#78350F" };
+        return { bg: "#C86D51", text: "#FFFFFF" };
+      }
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto select-none">`;
+      for (let r = 0; r < 4; r++) {
+        svg += `<text x="${leftPad - 8}" y="${topPad + r * cellH + cellH / 2 + 4}" text-anchor="end" font-size="11" font-weight="600" fill="#334155">${labels[r]}</text>`;
+        for (let c = 0; c < 4; c++) {
+          const val = corr[r][c];
+          const style = cellColor(val);
+          const x = leftPad + c * cellW;
+          const y = topPad + r * cellH;
+          svg += `<rect x="${x + 2}" y="${y + 2}" width="${cellW - 4}" height="${cellH - 4}" rx="8" fill="${style.bg}"
+            onmousemove="showTooltip(evt, '<strong>${labels[r]} × ${labels[c]}</strong><br/>Pearson r = ${val.toFixed(2)}')"
+            onmouseout="hideTooltip()" class="cursor-pointer transition-opacity hover:opacity-90" />`;
+          svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 4}" text-anchor="middle" font-size="12" font-weight="700" font-family="JetBrains Mono" fill="${style.text}" pointer-events="none">${val.toFixed(2)}</text>`;
+        }
+      }
+      for (let c = 0; c < 4; c++) {
+        svg += `<text x="${leftPad + c * cellW + cellW / 2}" y="${topPad + 4 * cellH + 18}" text-anchor="middle" font-size="11" font-weight="600" fill="#334155">${labels[c]}</text>`;
+      }
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    function selectScatterMode(mode) {
+      currentScatterMode = mode;
+      const btnP = document.getElementById('scatter-mode-petal');
+      const btnS = document.getElementById('scatter-mode-sepal');
+      if (mode === 'petal') {
+        btnP.classList.add('bg-[#1B365D]', 'text-white', 'shadow-sm');
+        btnP.classList.remove('text-slate-600');
+        btnS.classList.remove('bg-[#1B365D]', 'text-white', 'shadow-sm');
+        btnS.classList.add('text-slate-600');
+        document.getElementById('fig3-caption').innerHTML =
+          `<strong>Petal Space Geometry:</strong> <em>Iris setosa</em> is separated by a >1.1 cm margin in petal length, whereas <em>Iris versicolor</em> and <em>Iris virginica</em> meet along a narrow diagonal transition zone near (4.9 cm, 1.7 cm).`;
+      } else {
+        btnS.classList.add('bg-[#1B365D]', 'text-white', 'shadow-sm');
+        btnS.classList.remove('text-slate-600');
+        btnP.classList.remove('bg-[#1B365D]', 'text-white', 'shadow-sm');
+        btnP.classList.add('text-slate-600');
+        document.getElementById('fig3-caption').innerHTML =
+          `<strong>Sepal Space Overlap:</strong> In sepal coordinates, <em>Iris versicolor</em> and <em>Iris virginica</em> intermingle extensively across sepal lengths of 5.5–7.0 cm and sepal widths of 2.5–3.2 cm, explaining why petal measurements carry higher classifier weights.`;
+      }
+      renderFig3(mode);
+    }
+
+    function renderFig3(mode) {
+      const container = document.getElementById('fig3-container');
+      const W = 820, H = 290;
+      const pad = { top: 20, right: 30, bottom: 40, left: 54 };
+      const plotW = W - pad.left - pad.right;
+      const plotH = H - pad.top - pad.bottom;
+
+      const isPetal = mode === 'petal';
+      const xIdx = isPetal ? 2 : 0;
+      const yIdx = isPetal ? 3 : 1;
+      const xMin = isPetal ? 0.8 : 4.1, xMax = isPetal ? 7.2 : 8.1;
+      const yMin = isPetal ? 0.0 : 1.8, yMax = isPetal ? 2.7 : 4.6;
+      const xLabel = isPetal ? "Petal Length (cm)" : "Sepal Length (cm)";
+      const yLabel = isPetal ? "Petal Width (cm)" : "Sepal Width (cm)";
+
+      const sx = v => pad.left + ((v - xMin) / (xMax - xMin)) * plotW;
+      const sy = v => pad.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto select-none">`;
+
+      for (let i = 0; i <= 6; i++) {
+        const vx = xMin + (i / 6) * (xMax - xMin);
+        const x = sx(vx);
+        svg += `<line x1="${x}" y1="${pad.top}" x2="${x}" y2="${pad.top + plotH}" stroke="#E2E8F0" stroke-dasharray="3,3" />`;
+        svg += `<text x="${x}" y="${H - 16}" text-anchor="middle" font-size="10" fill="#64748B" font-family="JetBrains Mono">${vx.toFixed(1)}</text>`;
+      }
+      for (let i = 0; i <= 5; i++) {
+        const vy = yMin + (i / 5) * (yMax - yMin);
+        const y = sy(vy);
+        svg += `<line x1="${pad.left}" y1="${y}" x2="${pad.left + plotW}" y2="${y}" stroke="#E2E8F0" stroke-dasharray="3,3" />`;
+        svg += `<text x="${pad.left - 8}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="#64748B" font-family="JetBrains Mono">${vy.toFixed(1)}</text>`;
+      }
+
+      svg += `<text x="${pad.left + plotW / 2}" y="${H - 2}" text-anchor="middle" font-size="11" font-weight="600" fill="#1B365D">${xLabel}</text>`;
+      svg += `<text x="16" y="${pad.top + plotH / 2}" text-anchor="middle" font-size="11" font-weight="600" fill="#1B365D" transform="rotate(-90 16 ${pad.top + plotH / 2})">${yLabel}</text>`;
+
+      IRIS_DATA.forEach((d, idx) => {
+        const cx = sx(d[xIdx]);
+        const cy = sy(d[yIdx]);
+        const cls = MODEL.classes[d[4]];
+        const tip = `<strong>Specimen #${idx + 1} (${cls.name})</strong><br/>Sepal: ${d[0].toFixed(1)} × ${d[1].toFixed(1)} cm<br/>Petal: ${d[2].toFixed(1)} × ${d[3].toFixed(1)} cm`;
+        if (d[4] === 0) {
+          svg += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="#1B365D" fill-opacity="0.82" class="cursor-pointer" onmousemove="showTooltip(evt, '${tip}')" onmouseout="hideTooltip()" />`;
+        } else if (d[4] === 1) {
+          svg += `<rect x="${cx - 4}" y="${cy - 4}" width="8" height="8" rx="1.5" fill="#2E7D6B" fill-opacity="0.85" class="cursor-pointer" onmousemove="showTooltip(evt, '${tip}')" onmouseout="hideTooltip()" />`;
+        } else {
+          svg += `<polygon points="${cx},${cy - 5.2} ${cx - 4.8},${cy + 4} ${cx + 4.8},${cy + 4}" fill="#C86D51" fill-opacity="0.88" class="cursor-pointer" onmousemove="showTooltip(evt, '${tip}')" onmouseout="hideTooltip()" />`;
+        }
+      });
+
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    // =====================================================================
+    // TAB 3 CHARTS: FIGURE 4, FIGURE 5, FIGURE 6
+    // =====================================================================
+    function renderFig4() {
+      const container = document.getElementById('fig4-container');
+      const matrix = [
+        [10, 0, 0],
+        [0, 9, 1],
+        [0, 1, 9]
+      ];
+      const names = ["Setosa", "Versicolor", "Virginica"];
+      const W = 460, H = 290;
+      const leftPad = 105, topPad = 36, cellW = 108, cellH = 68;
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto select-none">`;
+      svg += `<text x="${leftPad + 1.5 * cellW}" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#1B365D">Predicted Species Class</text>`;
+      svg += `<text x="18" y="${topPad + 1.5 * cellH}" text-anchor="middle" font-size="11" font-weight="700" fill="#1B365D" transform="rotate(-90 18 ${topPad + 1.5 * cellH})">Actual Ground-Truth Class</text>`;
+
+      for (let r = 0; r < 3; r++) {
+        svg += `<text x="${leftPad - 10}" y="${topPad + r * cellH + cellH / 2 + 4}" text-anchor="end" font-size="11" font-weight="700" fill="#334155">${names[r]}</text>`;
+        for (let c = 0; c < 3; c++) {
+          const val = matrix[r][c];
+          const isDiag = r === c;
+          const bg = val === 10 ? "#1B365D" : val === 9 ? "#2E7D6B" : val === 1 ? "#FDE68A" : "#F1F5F9";
+          const fg = val >= 9 ? "#FFFFFF" : val === 1 ? "#92400E" : "#94A3B8";
+          const x = leftPad + c * cellW;
+          const y = topPad + r * cellH;
+          const status = isDiag ? "Correct Classification" : val === 1 ? "Boundary Misclassification" : "Zero Errors";
+
+          svg += `<rect x="${x + 3}" y="${y + 3}" width="${cellW - 6}" height="${cellH - 6}" rx="10" fill="${bg}"
+            onmousemove="showTooltip(evt, '<strong>Actual: ${names[r]} → Predicted: ${names[c]}</strong><br/>Count: ${val} / 10 (${val * 10}%)<br/>Status: ${status}')"
+            onmouseout="hideTooltip()" class="cursor-pointer" />`;
+          svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 6}" text-anchor="middle" font-size="20" font-weight="800" font-family="JetBrains Mono" fill="${fg}" pointer-events="none">${val}</text>`;
+        }
+      }
+      for (let c = 0; c < 3; c++) {
+        svg += `<text x="${leftPad + c * cellW + cellW / 2}" y="${topPad + 3 * cellH + 18}" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">${names[c]}</text>`;
+      }
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    function renderFig5() {
+      const container = document.getElementById('fig5-container');
+      const models = [
+        { name: "Logistic Reg.", acc: 93.33, cv: 95.33, f1: 93.33 },
+        { name: "SVM (RBF)", acc: 96.67, cv: 95.33, f1: 96.66 },
+        { name: "KNN (k=5)", acc: 93.33, cv: 96.67, f1: 93.27 },
+        { name: "Random Forest", acc: 90.00, cv: 94.67, f1: 89.97 }
+      ];
+      const W = 520, H = 275;
+      const pad = { top: 28, right: 20, bottom: 42, left: 45 };
+      const plotW = W - pad.left - pad.right;
+      const plotH = H - pad.top - pad.bottom;
+
+      const yMin = 85, yMax = 100;
+      const sy = v => pad.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto select-none">`;
+
+      // Legend at top
+      const legend = [
+        { label: "Hold-Out Accuracy", color: "#1B365D", x: 55 },
+        { label: "5-Fold CV Mean", color: "#2E7D6B", x: 205 },
+        { label: "Macro F1-Score", color: "#C86D51", x: 345 }
+      ];
+      legend.forEach(l => {
+        svg += `<rect x="${l.x}" y="6" width="10" height="10" rx="2.5" fill="${l.color}" />`;
+        svg += `<text x="${l.x + 15}" y="15" font-size="10.5" font-weight="600" fill="#334155">${l.label}</text>`;
+      });
+
+      [85, 88, 91, 94, 97, 100].forEach(tick => {
+        const y = sy(tick);
+        svg += `<line x1="${pad.left}" y1="${y}" x2="${pad.left + plotW}" y2="${y}" stroke="#E2E8F0" stroke-dasharray="3,3" />`;
+        svg += `<text x="${pad.left - 6}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="#64748B" font-family="JetBrains Mono">${tick}%</text>`;
+      });
+
+      const groupW = plotW / models.length;
+      const barW = 22;
+
+      models.forEach((m, i) => {
+        const gx = pad.left + i * groupW + groupW / 2;
+        const bars = [
+          { val: m.acc, color: "#1B365D", label: "Hold-Out Accuracy" },
+          { val: m.cv, color: "#2E7D6B", label: "5-Fold CV Accuracy" },
+          { val: m.f1, color: "#C86D51", label: "Macro F1-Score" }
+        ];
+        bars.forEach((b, bi) => {
+          const bx = gx - 1.5 * barW + bi * barW;
+          const by = sy(b.val);
+          const bh = pad.top + plotH - by;
+          svg += `<rect x="${bx + 1}" y="${by}" width="${barW - 2}" height="${bh}" rx="4" fill="${b.color}"
+            onmousemove="showTooltip(evt, '<strong>${m.name}</strong><br/>${b.label}: ${b.val.toFixed(2)}%')"
+            onmouseout="hideTooltip()" class="cursor-pointer hover:opacity-85" />`;
+        });
+        svg += `<text x="${gx}" y="${H - 14}" text-anchor="middle" font-size="11" font-weight="700" fill="#1B365D">${m.name}</text>`;
+      });
+
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    function renderFig6() {
+      const container = document.getElementById('fig6-container');
+      const items = [
+        { name: "Petal Width", lr: 1.663, rf: 0.437 },
+        { name: "Petal Length", lr: 1.335, rf: 0.431 },
+        { name: "Sepal Length", lr: 0.726, rf: 0.116 },
+        { name: "Sepal Width", lr: 0.683, rf: 0.015 }
+      ];
+      const W = 520, H = 275;
+      const pad = { top: 32, right: 24, bottom: 28, left: 95 };
+      const midGap = 24;
+      const halfW = (W - pad.left - pad.right - midGap) / 2;
+      const rowH = (H - pad.top - pad.bottom) / items.length;
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto select-none">`;
+      svg += `<text x="${pad.left + halfW / 2}" y="16" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1B365D">LogReg Mean |Weight|</text>`;
+      svg += `<text x="${pad.left + halfW + midGap + halfW / 2}" y="16" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2E7D6B">Random Forest Gini</text>`;
+
+      items.forEach((it, i) => {
+        const y = pad.top + i * rowH + 10;
+        const bh = 26;
+        svg += `<text x="${pad.left - 10}" y="${y + 17}" text-anchor="end" font-size="11" font-weight="700" fill="#334155">${it.name}</text>`;
+
+        // LogReg bar
+        const w1 = (it.lr / 1.9) * halfW;
+        svg += `<rect x="${pad.left}" y="${y}" width="${w1}" height="${bh}" rx="5" fill="#1B365D" />`;
+        svg += `<text x="${pad.left + w1 + 5}" y="${y + 17}" font-size="10" font-weight="700" font-family="JetBrains Mono" fill="#1B365D">${it.lr.toFixed(3)}</text>`;
+
+        // RF Gini bar
+        const x2 = pad.left + halfW + midGap;
+        const w2 = Math.max(4, (it.rf / 0.52) * halfW);
+        svg += `<rect x="${x2}" y="${y}" width="${w2}" height="${bh}" rx="5" fill="#2E7D6B" />`;
+        svg += `<text x="${x2 + w2 + 5}" y="${y + 17}" font-size="10" font-weight="700" font-family="JetBrains Mono" fill="#2E7D6B">${it.rf.toFixed(3)}</text>`;
+      });
+
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    // Initialize App on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      runInference();
+    });
   </script>
 </body>
 </html>
